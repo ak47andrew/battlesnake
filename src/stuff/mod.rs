@@ -1,4 +1,4 @@
 pub mod datatypes;
-pub mod algorythms;
+pub mod algorithms;
 pub mod tools;
 pub mod settings;

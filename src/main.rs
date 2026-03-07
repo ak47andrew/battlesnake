@@ -11,7 +11,7 @@ use actix_web::{get, post, App, HttpResponse, HttpServer, Responder};
 use stuff::datatypes::{GameState, MoveOutput};
 use tracing::{info, instrument};
 
-use crate::stuff::algorythms;
+use crate::stuff::algorithms;
 use crate::stuff::datatypes::CellState;
 
 
@@ -43,26 +43,26 @@ async fn handle_start(start_req: Json<GameState>) -> impl Responder {
 async fn handle_move(move_req: Json<GameState>) -> Json<MoveOutput> {
     info!(?move_req, "Move request received");
 
-    let moves = algorythms::evaluate(&move_req.you, &move_req.board, move_req.turn);
+    let moves = algorithms::evaluate(&move_req.you, &move_req.board, move_req.turn);
     info!(?moves, "Available moves");
 
-    for state in vec![CellState::SAFE, CellState::POTENTIALHEAD, CellState::POTENTIALTAIL] {
-        let submoves = moves
+    for state in vec![CellState::SAFE, CellState::POTENTIAL_HEAD, CellState::POTENTIAL_TAIL] {
+        let sub_moves = moves
                         .iter()
                         .filter(|x: &(&&str, &(f32, CellState))| x.1.1 == state)
                         .map(|(k, v)| (*k, *v))
                         .collect::<HashMap<&str, (f32, CellState)>>();
         
-        if submoves.is_empty() {
+        if sub_moves.is_empty() {
             info!("No moves found for state {:?}", state);
             continue;
         }
-        info!(?submoves, "Moves for state {:?}", state);
+        info!(?sub_moves, "Moves for state {:?}", state);
         
-        let max_value = submoves.values().max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal)).unwrap().0;
-        info!(?submoves, "Best value for state {:?}: {:?}", state, max_value);
+        let max_value = sub_moves.values().max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal)).unwrap().0;
+        info!(?sub_moves, "Best value for state {:?}: {:?}", state, max_value);
     
-        let max_moves: Vec<&str> = submoves.iter()
+        let max_moves: Vec<&str> = sub_moves.iter()
                                                 .filter(|(_, v)| v.0 == max_value)
                                                 .map(|(k, _)| *k)
                                                 .collect();

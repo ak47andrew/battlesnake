@@ -43,7 +43,7 @@ pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static 
 
     let head = me.head;
     let threat_board = build_threat_board(&me, &board, turn);
-    let lowlevel_heads = get_lowlevel_snakes(me, board);
+    let low_level_heads = get_low_level_snakes(me, board);
     
     // // Step 1. Check boundaries
     if head.x == 0 {
@@ -66,8 +66,8 @@ pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static 
         let next_head = head.shift_by_name(&dir);
         match threat_board[next_head.y as usize][next_head.x as usize] {
             CellState::DEATH => output.insert(dir, (f32::NEG_INFINITY, CellState::DEATH)),
-            CellState::POTENTIALHEAD => output.insert(dir, (0.0, CellState::POTENTIALHEAD)),
-            CellState::POTENTIALTAIL => output.insert(dir, (0.0, CellState::POTENTIALTAIL)),
+            CellState::POTENTIAL_HEAD => output.insert(dir, (0.0, CellState::POTENTIAL_HEAD)),
+            CellState::POTENTIAL_TAIL => output.insert(dir, (0.0, CellState::POTENTIAL_TAIL)),
             CellState::SAFE => {
                 // Assigning actual score
                 let state: CellState = CellState::SAFE;
@@ -75,11 +75,11 @@ pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static 
 
                 // Reaching the goal
                 let dests: &[Coord];
-                if me.health <= 30 || lowlevel_heads.is_empty() {
+                if me.health <= 30 || low_level_heads.is_empty() {
                     dests = &board.food;
                     info!("Reaching food");
                 } else {
-                    dests = &lowlevel_heads;
+                    dests = &low_level_heads;
                     info!("Reaching low-level snakes");
                 }
 
@@ -97,7 +97,7 @@ pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static 
     output
 }
 
-pub fn get_lowlevel_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
+pub fn get_low_level_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
     let mut output: Vec<Coord> = Vec::new();
 
     for snake in &board.snakes {
@@ -110,7 +110,7 @@ pub fn get_lowlevel_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
         }
     }
 
-    return output;
+    output
 }
 
 pub fn is_about_to_eat(snake: &Battlesnake, board: &Board) -> bool {
@@ -121,13 +121,10 @@ pub fn is_about_to_eat(snake: &Battlesnake, board: &Board) -> bool {
         }
     }
 
-    return false;
+    false
 }
 
 pub fn build_threat_board(me: &Battlesnake, board: &Board, turn: u32) -> Vec<Vec<CellState>> {
-    //! IMPORTANT! This is battlesnake's coordinates so buttom left is the (0,0). 
-    //! When outputtting be sure to reverse the matrix' first layer so the rows will be in a correct position to see
-    //! Tho when doing everything in the battlesnake's coordinates - you'll probably be pretty fine
     let mut threat_board= vec![vec![CellState::SAFE; board.width as usize]; board.height as usize];
     
     for snake in &board.snakes {
@@ -137,7 +134,7 @@ pub fn build_threat_board(me: &Battlesnake, board: &Board, turn: u32) -> Vec<Vec
             if snake.id != me.id {
                 for s in snake.head.surrounded() {
                     if s.y >= 0 && s.y < board.height && s.x >= 0 && s.x < board.width {
-                        threat_board[s.y as usize][s.x as usize] = CellState::POTENTIALHEAD;
+                        threat_board[s.y as usize][s.x as usize] = CellState::POTENTIAL_HEAD;
                     }
                 }
             }
@@ -149,12 +146,13 @@ pub fn build_threat_board(me: &Battlesnake, board: &Board, turn: u32) -> Vec<Vec
         }
 
         // Tail
-        if !is_about_to_eat(snake, board) && turn >= 3{  // FIXME: When battlesnake ate on the last turn it's tail will be kept in place
-            threat_board[snake.body[(snake.length - 1) as usize].y as usize][snake.body[(snake.length - 1) as usize].x as usize] = CellState::SAFE;
-        } else {
-            threat_board[snake.body[(snake.length - 1) as usize].y as usize][snake.body[(snake.length - 1) as usize].x as usize] = CellState::POTENTIALTAIL;
-        }
+        threat_board[snake.body[(snake.length - 1) as usize].y as usize][snake.body[(snake.length - 1) as usize].x as usize] = 
+            if !is_about_to_eat(snake, board) && turn >= 3 {
+                 CellState::SAFE
+            } else { 
+                CellState::POTENTIAL_TAIL
+            }
     }
     
-    return threat_board;
+    threat_board
 }

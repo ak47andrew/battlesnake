@@ -39,11 +39,11 @@ pub struct Coord {
 impl Coord {
     pub fn shift_by_name(&self, direction: &str) -> Self {
         match direction {
-            "up" => return self.shift_by_coord(&Coord { x: 0, y: 1 }),
-            "down" => return self.shift_by_coord(&Coord { x: 0, y: -1 }),
-            "left" => return self.shift_by_coord(&Coord { x: -1, y: 0 }),
-            "right" => return self.shift_by_coord(&Coord { x: 1, y: 0 }),
-            _ => return *self,
+            "up" => self.shift_by_coord(&Coord { x: 0, y: 1 }),
+            "down" => self.shift_by_coord(&Coord { x: 0, y: -1 }),
+            "left" => self.shift_by_coord(&Coord { x: -1, y: 0 }),
+            "right" => self.shift_by_coord(&Coord { x: 1, y: 0 }),
+            _ => *self,
         }
     }
 
@@ -53,12 +53,12 @@ impl Coord {
 
     #[allow(dead_code, unused)]
     pub fn surrounded(&self) -> Vec<Self> {
-        return vec![
+        vec![
             self.shift_by_name("up"),
             self.shift_by_name("down"),
             self.shift_by_name("left"),
             self.shift_by_name("right"),
-        ];
+        ]
     }
 }
 
@@ -77,10 +77,11 @@ pub struct MoveOutput {
     pub shout: String,
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub enum CellState {
     SAFE,
-    POTENTIALHEAD,
-    POTENTIALTAIL,
+    POTENTIAL_HEAD,
+    POTENTIAL_TAIL,
     DEATH,
 }
