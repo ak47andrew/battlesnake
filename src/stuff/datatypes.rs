@@ -82,6 +82,5 @@ pub struct MoveOutput {
 pub enum CellState {
     SAFE,
     POTENTIAL_HEAD,
-    POTENTIAL_TAIL,
     DEATH,
 }

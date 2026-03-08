@@ -19,7 +19,7 @@ WORKDIR /app
 COPY --from=builder /app/target/release/battlesnake .
 
 # Expose the port your Rust server uses
-EXPOSE 9111
+EXPOSE 9100
 
 # Run the binary
 CMD ["./battlesnake"]

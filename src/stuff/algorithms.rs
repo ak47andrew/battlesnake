@@ -4,37 +4,7 @@ use tracing::info;
 
 use crate::stuff::{datatypes::{Battlesnake, Board, CellState, Coord}, settings, tools};
 
-// pub fn sorted_moves_to_points(
-//     available_directions: Vec<&'static str>,
-//     head: Coord,
-//     dests: &[Coord]
-// ) -> &'static str {
-//     available_directions
-//         .into_iter()
-//         .min_by(|a, b| {
-//             let dist_a = min_distance(head.shift_by_name(a), dests);
-//             let dist_b = min_distance(head.shift_by_name(b), dests);
-//             dist_a.partial_cmp(&dist_b).unwrap_or(std::cmp::Ordering::Equal)
-//         })
-//         .expect("available_directions is not empty")
-// }
-
-// // pub fn get_dangerous_coords(me: Battlesnake, board: Board) -> Vec<Coord> {
-//     let mut coords: Vec<Coord> = vec![];
-
-//     for snake in board.snakes {
-//         for part in snake.body {
-//             coords.push(part);
-//             if part == snake.head && snake.id != me.id && snake.length >= me.length {
-//                 coords.append(&mut part.surrounded());
-//             }
-//         }
-//     }
-
-//     return coords;
-// }
-
-pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static str, (f32, CellState)> {
+pub fn evaluate(me: &Battlesnake, board: &Board) -> HashMap<&'static str, (f32, CellState)> {
     let directions = ["up", "down", "left", "right"];
     let mut output: HashMap<&'static str, (f32, CellState)> = HashMap::new();
     for dir in directions {
@@ -42,7 +12,7 @@ pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static 
     }
 
     let head = me.head;
-    let threat_board = build_threat_board(&me, &board, turn);
+    let threat_board = build_threat_board(&me, &board);
     let low_level_heads = get_low_level_snakes(me, board);
     
     // // Step 1. Check boundaries
@@ -67,7 +37,6 @@ pub fn evaluate(me: &Battlesnake, board: &Board, turn: u32) -> HashMap<&'static 
         match threat_board[next_head.y as usize][next_head.x as usize] {
             CellState::DEATH => output.insert(dir, (f32::NEG_INFINITY, CellState::DEATH)),
             CellState::POTENTIAL_HEAD => output.insert(dir, (0.0, CellState::POTENTIAL_HEAD)),
-            CellState::POTENTIAL_TAIL => output.insert(dir, (0.0, CellState::POTENTIAL_TAIL)),
             CellState::SAFE => {
                 // Assigning actual score
                 let state: CellState = CellState::SAFE;
@@ -105,7 +74,7 @@ pub fn get_low_level_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
             continue;
         }
 
-        if snake.length <= me.length - 2{
+        if snake.length <= me.length - 2 {
             output.push(snake.head);
         }
     }
@@ -113,18 +82,7 @@ pub fn get_low_level_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
     output
 }
 
-pub fn is_about_to_eat(snake: &Battlesnake, board: &Board) -> bool {
-    let head = snake.head;
-    for dir in vec!["up", "down", "left", "right"] {
-        if board.food.contains(&head.shift_by_name(dir)){
-            return true;
-        }
-    }
-
-    false
-}
-
-pub fn build_threat_board(me: &Battlesnake, board: &Board, turn: u32) -> Vec<Vec<CellState>> {
+pub fn build_threat_board(me: &Battlesnake, board: &Board) -> Vec<Vec<CellState>> {
     let mut threat_board= vec![vec![CellState::SAFE; board.width as usize]; board.height as usize];
     
     for snake in &board.snakes {
@@ -144,14 +102,6 @@ pub fn build_threat_board(me: &Battlesnake, board: &Board, turn: u32) -> Vec<Vec
         for part in &snake.body[1..snake.body.len() - 1] {
             threat_board[part.y as usize][part.x as usize] = CellState::DEATH;
         }
-
-        // Tail
-        threat_board[snake.body[(snake.length - 1) as usize].y as usize][snake.body[(snake.length - 1) as usize].x as usize] = 
-            if !is_about_to_eat(snake, board) && turn >= 3 {
-                 CellState::SAFE
-            } else { 
-                CellState::POTENTIAL_TAIL
-            }
     }
     
     threat_board

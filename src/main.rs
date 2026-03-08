@@ -13,25 +13,41 @@ use tracing::{info, instrument};
 
 use crate::stuff::algorithms;
 use crate::stuff::datatypes::CellState;
+use crate::stuff::tools::{get_app_mode, AppMode};
 
+// TODO: space check: just ln (x / n), don't overcomplicate things
 
 #[get("/")]
 async fn index() -> impl Responder {
-    Json(serde_json::json!(
-            {
-                "apiversion": "1", 
-                "author": "ak47andrew", 
-                "color": "#FF0000",
-                "head": "smile", 
-                "tail": "hook"
-            }
-        )
-    )
+    match get_app_mode() {
+        AppMode::DEV => {
+            Json(serde_json::json!(
+                {
+                    "apiversion": "1",
+                    "author": "ak47andrew",
+                    "color": "#7d7d7d",
+                    "head": "safe",
+                    "tail": "freckled"
+                })
+            )
+        }
+        AppMode::PROD => {
+            Json(serde_json::json!(
+                {
+                    "apiversion": "1",
+                    "author": "ak47andrew",
+                    "color": "#FF0000",
+                    "head": "crystal-power",
+                    "tail": "nr-booster"
+                })
+            )
+        }
+    }
 }
 
 #[post("/start")]
 async fn handle_start(start_req: Json<GameState>) -> impl Responder {
-    println!("Started game at https://play.battlesnake.com/game/{}; Snakes:", start_req.game.id);
+    println!("Started game at https://play.battlesnake.com/game/{} Snakes:", start_req.game.id);
     for snake in start_req.board.snakes.iter() {
         println!("- {} ({})", snake.name, snake.id);
     }
@@ -43,10 +59,10 @@ async fn handle_start(start_req: Json<GameState>) -> impl Responder {
 async fn handle_move(move_req: Json<GameState>) -> Json<MoveOutput> {
     info!(?move_req, "Move request received");
 
-    let moves = algorithms::evaluate(&move_req.you, &move_req.board, move_req.turn);
+    let moves = algorithms::evaluate(&move_req.you, &move_req.board);
     info!(?moves, "Available moves");
 
-    for state in vec![CellState::SAFE, CellState::POTENTIAL_HEAD, CellState::POTENTIAL_TAIL] {
+    for state in vec![CellState::SAFE, CellState::POTENTIAL_HEAD] {
         let sub_moves = moves
                         .iter()
                         .filter(|x: &(&&str, &(f32, CellState))| x.1.1 == state)
@@ -124,7 +140,7 @@ async fn main() -> std::io::Result<()> {
             .service(handle_move)
             .service(handle_end)
     })
-    .bind(("0.0.0.0", 9111))?
+    .bind(("0.0.0.0", 9100))?
     .run()
     .await
 }
