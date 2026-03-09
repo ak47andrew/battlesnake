@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use serde_json::Value;
@@ -78,9 +79,53 @@ pub struct MoveOutput {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum CellState {
-    SAFE,
-    POTENTIAL_HEAD,
+    SAFE (f32),
+    POTENTIAL_HEAD (f32),
     DEATH,
+}
+
+impl Eq for CellState {}
+
+impl Ord for CellState {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (CellState::SAFE(v1), CellState::SAFE(v2)) => v1.total_cmp(v2),
+            (CellState::SAFE(_), CellState::POTENTIAL_HEAD(_)) => Ordering::Greater,
+            (CellState::SAFE(_), CellState::DEATH) => Ordering::Greater,
+            (CellState::POTENTIAL_HEAD(_), CellState::SAFE(_)) => Ordering::Less,
+            (CellState::POTENTIAL_HEAD(v1), CellState::POTENTIAL_HEAD(v2)) => v1.total_cmp(v2),
+            (CellState::POTENTIAL_HEAD(_), CellState::DEATH) => Ordering::Greater,
+            (CellState::DEATH, CellState::SAFE(_)) => Ordering::Less,
+            (CellState::DEATH, CellState::POTENTIAL_HEAD(_)) => Ordering::Less,
+            (CellState::DEATH, CellState::DEATH) => Ordering::Equal,
+        }
+    }
+}
+
+impl CellState {
+    pub fn add_value(self, value: f32) -> Self {
+        match self {
+            CellState::SAFE(v) => {CellState::SAFE(v + value)},
+            CellState::POTENTIAL_HEAD(v) => {CellState::POTENTIAL_HEAD(v + value)},
+            CellState::DEATH => {panic!("Adding value to DEATH. Do a better checking boy~")}
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum MoveFilter {
+    Safe,
+    PotentialHead
+}
+
+impl MoveFilter {
+    pub fn check(&self, state: &CellState) -> bool {
+        match (self, state) {
+            (MoveFilter::Safe, CellState::SAFE(_)) => true,
+            (MoveFilter::PotentialHead, CellState::POTENTIAL_HEAD(_)) => true,
+            _ => false
+        }
+    }
 }

@@ -12,7 +12,7 @@ use stuff::datatypes::{GameState, MoveOutput};
 use tracing::{info, instrument};
 
 use crate::stuff::algorithms;
-use crate::stuff::datatypes::CellState;
+use crate::stuff::datatypes::{CellState, MoveFilter};
 use crate::stuff::tools::{get_app_mode, AppMode};
 
 // TODO: space check: just ln (x / n), don't overcomplicate things
@@ -62,24 +62,27 @@ async fn handle_move(move_req: Json<GameState>) -> Json<MoveOutput> {
     let moves = algorithms::evaluate(&move_req.you, &move_req.board);
     info!(?moves, "Available moves");
 
-    for state in vec![CellState::SAFE, CellState::POTENTIAL_HEAD] {
+    for filter in [MoveFilter::Safe, MoveFilter::PotentialHead] {
         let sub_moves = moves
                         .iter()
-                        .filter(|x: &(&&str, &(f32, CellState))| x.1.1 == state)
+                        .filter(|(_, s)| filter.check(s))
                         .map(|(k, v)| (*k, *v))
-                        .collect::<HashMap<&str, (f32, CellState)>>();
+                        .collect::<HashMap<&str, CellState>>();
         
         if sub_moves.is_empty() {
-            info!("No moves found for state {:?}", state);
+            info!("No moves found for state {:?}", filter);
             continue;
         }
-        info!(?sub_moves, "Moves for state {:?}", state);
+        info!(?sub_moves, "Moves for state {:?}", filter);
         
-        let max_value = sub_moves.values().max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal)).unwrap().0;
-        info!(?sub_moves, "Best value for state {:?}: {:?}", state, max_value);
+        let max_value = sub_moves
+            .values()
+            .max()
+            .unwrap();
+        info!(?sub_moves, "Best value for state {:?}: {:?}", filter, max_value);
     
         let max_moves: Vec<&str> = sub_moves.iter()
-                                                .filter(|(_, v)| v.0 == max_value)
+                                                .filter(|(_, v)| *v == max_value)
                                                 .map(|(k, _)| *k)
                                                 .collect();
         
