@@ -113,19 +113,3 @@ impl CellState {
         }
     }
 }
-
-#[derive(Debug, Clone, Copy)]
-pub enum MoveFilter {
-    Safe,
-    PotentialHead
-}
-
-impl MoveFilter {
-    pub fn check(&self, state: &CellState) -> bool {
-        match (self, state) {
-            (MoveFilter::Safe, CellState::SAFE(_)) => true,
-            (MoveFilter::PotentialHead, CellState::POTENTIAL_HEAD(_)) => true,
-            _ => false
-        }
-    }
-}

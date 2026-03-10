@@ -1,8 +1,7 @@
 use std::{collections::HashMap};
 
-use tracing::info;
-
-use crate::stuff::{datatypes::{Battlesnake, Board, CellState, Coord}, settings, tools};
+use crate::stuff::datatypes::{Battlesnake, Board, CellState};
+use crate::stuff::move_algos::{EvalData, EVAL_ALGOS};
 
 pub fn evaluate(me: &Battlesnake, board: &Board) -> HashMap<&'static str, CellState> {
     let directions = ["up", "down", "left", "right"];
@@ -13,8 +12,7 @@ pub fn evaluate(me: &Battlesnake, board: &Board) -> HashMap<&'static str, CellSt
 
     let head = me.head;
     let threat_board = build_threat_board(&me, &board);
-    let low_level_heads = get_low_level_snakes(me, board);
-    
+
     // // Step 1. Check boundaries
     if head.x == 0 {
         output.insert("left", CellState::DEATH);
@@ -38,43 +36,20 @@ pub fn evaluate(me: &Battlesnake, board: &Board) -> HashMap<&'static str, CellSt
             CellState::DEATH => output.insert(dir, CellState::DEATH),
             init_state => {
                 // Assigning actual score
-                let state: CellState = init_state;
+                let mut state: CellState = init_state;
+                let eval_data = EvalData {
+                    me,
+                    board,
+                    next_head: &next_head
+                };
 
-                // Reaching the goal
-                let dests: &[Coord];
-                if me.health <= 30 || low_level_heads.is_empty() {
-                    dests = &board.food;
-                    info!("Reaching food");
-                } else {
-                    dests = &low_level_heads;
-                    info!("Reaching low-level snakes");
+                for step in EVAL_ALGOS {
+                    state = step(&eval_data, init_state);
                 }
-
-                let dist = tools::min_distance(next_head, dests);
-                let state = state.add_value(settings::APPROACH_MODIFIER / dist as f32);
-
-                // TODO: add flood fill for safe areas and stuff. Make it a priority over the approach
 
                 output.insert(dir, state)
             }
         };
-    }
-
-
-    output
-}
-
-pub fn get_low_level_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
-    let mut output: Vec<Coord> = Vec::new();
-
-    for snake in &board.snakes {
-        if snake.id == me.id {
-            continue;
-        }
-
-        if snake.length <= me.length - 2 {
-            output.push(snake.head);
-        }
     }
 
     output
