@@ -1,3 +1,0 @@
-{"timestamp":"2026-03-07T16:37:42.651138Z","level":"INFO","fields":{"message":"starting 16 workers"},"target":"actix_server::builder"}
-{"timestamp":"2026-03-07T16:37:42.651592Z","level":"INFO","fields":{"message":"Actix runtime found; starting in Actix runtime"},"target":"actix_server::server"}
-{"timestamp":"2026-03-07T16:37:42.651659Z","level":"INFO","fields":{"message":"starting service: \"actix-web-service-0.0.0.0:9111\", workers: 16, listening on: 0.0.0.0:9111"},"target":"actix_server::server"}

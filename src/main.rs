@@ -62,49 +62,15 @@ async fn handle_move(move_req: Json<GameState>) -> Json<MoveOutput> {
     let moves = algorithms::evaluate(&move_req.you, &move_req.board);
     info!(?moves, "Available moves");
 
-    for filter in [MoveFilter::Safe, MoveFilter::PotentialHead] {
-        let sub_moves = moves
-                        .iter()
-                        .filter(|(_, s)| filter.check(s))
-                        .map(|(k, v)| (*k, *v))
-                        .collect::<HashMap<&str, CellState>>();
-        
-        if sub_moves.is_empty() {
-            info!("No moves found for state {:?}", filter);
-            continue;
-        }
-        info!(?sub_moves, "Moves for state {:?}", filter);
-        
-        let max_value = sub_moves
-            .values()
-            .max()
-            .unwrap();
-        info!(?sub_moves, "Best value for state {:?}: {:?}", filter, max_value);
-    
-        let max_moves: Vec<&str> = sub_moves.iter()
-                                                .filter(|(_, v)| *v == max_value)
-                                                .map(|(k, _)| *k)
-                                                .collect();
-        
-        info!("There's {} moves to be chosen", max_moves.len());
-        
-        let random_move = max_moves.choose(&mut rand::rng()).unwrap();
-        info!(?random_move, "Chosen move");
-        
-        return Json(
-            MoveOutput 
-            { 
-                movement: random_move.to_string(),
-                shout: String::from("AAAAAAAAAAAAAAAAAAAAAAAA")
-            }
-        )
-    }
+    let (move_str, value) = moves.iter().max_by_key(|(_, x)| **x).unwrap();
+    info!(?move_str, "Chosen move");
+    info!(?value, "Move's score");
 
     Json(
-        MoveOutput 
-        { 
-            movement: vec!["up", "down", "left", "right"].choose(&mut rand::rng()).unwrap().to_string(),
-            shout: String::from("AAAAAAAAAAAAAAAAAAAAAAAA") 
+        MoveOutput
+        {
+            movement: move_str.to_string(),
+            shout: String::from("AAAAAAAAAAAAAAAAAAAAAAAA")
         }
     )
 }
