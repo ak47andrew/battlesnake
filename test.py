@@ -4,15 +4,15 @@ import re
 import math
 
 pattern = re.compile(r"(\w+) was the winner")
-TOTAL_GAMES = 50
+TOTAL_GAMES = 3000
 
 prod_wins = 0
 draws = 0
 with alive_bar(TOTAL_GAMES) as bar:
     for _ in range(TOTAL_GAMES):
         result = subprocess.run(["battlesnake", "play",
-                                 "--name", "main", "--url", "https://battlesnake.321657325.xyz",
-                                 "--name", "stage", "--url", "http://localhost:9100"],
+                                 "--name", "main", "--url", "http://localhost:9111",
+                                 "--name", "stage", "--url", "http://localhost:9112"],
                                  capture_output=True, text=True)
         output = result.stderr.splitlines()[-1]
         g = re.findall(pattern, output)

@@ -1,1 +1,2 @@
-pub const APPROACH_MODIFIER: f32 = 50.0;
+pub const FOOD_APPROACH_MODIFIER: f32 = 300.0;
+pub const HEAD_APPROACH_MODIFIER: f32 = 77.0;

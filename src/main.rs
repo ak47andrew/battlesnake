@@ -1,9 +1,7 @@
 mod stuff;
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
-use rand::prelude::IndexedRandom;
 
 use actix_web::web::Json;
 use actix_web::{get, post, App, HttpResponse, HttpServer, Responder};
@@ -12,7 +10,6 @@ use stuff::datatypes::{GameState, MoveOutput};
 use tracing::{info, instrument};
 
 use crate::stuff::algorithms;
-use crate::stuff::datatypes::{CellState, MoveFilter};
 use crate::stuff::tools::{get_app_mode, AppMode};
 
 // TODO: space check: just ln (x / n), don't overcomplicate things
