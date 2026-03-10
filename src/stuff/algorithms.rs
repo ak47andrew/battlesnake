@@ -44,7 +44,7 @@ pub fn evaluate(me: &Battlesnake, board: &Board) -> HashMap<&'static str, CellSt
                 };
 
                 for step in EVAL_ALGOS {
-                    state = step(&eval_data, init_state);
+                    state = step(&eval_data, state);
                 }
 
                 output.insert(dir, state)

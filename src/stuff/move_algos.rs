@@ -2,10 +2,10 @@ use crate::stuff::datatypes::{Battlesnake, Board, CellState, Coord};
 use crate::stuff::settings::{FOOD_APPROACH_MODIFIER, HEAD_APPROACH_MODIFIER};
 use crate::stuff::tools::min_distance;
 
-pub const EVAL_ALGOS: [fn(&EvalData, CellState) -> CellState; 3] = [
+pub const EVAL_ALGOS: [fn(&EvalData, CellState) -> CellState; 2] = [
     food_dest,
     aggressive_dest,
-    space_check
+    // space_check
 ];
 
 pub struct EvalData<'a> {
@@ -19,8 +19,10 @@ pub fn food_dest(data: &EvalData, state: CellState) -> CellState {
         return state;
     }
 
-    let dist = min_distance(*data.next_head, &*data.board.food);
-    state.add_value(FOOD_APPROACH_MODIFIER / dist as f32 - FOOD_APPROACH_MODIFIER / 100.0)
+    let dist = min_distance(*data.next_head, &*data.board.food) as f32;
+    let a = FOOD_APPROACH_MODIFIER * (100.4 - data.me.health as f32);
+    let area = (data.board.width + data.board.height) as f32;
+    state.add_value(a / dist - a / area)
 }
 
 pub fn aggressive_dest(data: &EvalData, state: CellState) -> CellState {
@@ -33,8 +35,10 @@ pub fn aggressive_dest(data: &EvalData, state: CellState) -> CellState {
         return state;
     }
 
-    let dist = min_distance(*data.next_head, &*low_level_heads);
-    state.add_value(HEAD_APPROACH_MODIFIER / dist as f32 - HEAD_APPROACH_MODIFIER / (data.board.width + data.board.height) as f32)
+    let dist = min_distance(*data.next_head, &*low_level_heads) as f32;
+    let b = HEAD_APPROACH_MODIFIER * dist;
+    let area = (data.board.width + data.board.height) as f32;
+    state.add_value(b / dist - b / area)
 }
 
 pub fn space_check(data: &EvalData, state: CellState) -> CellState {
@@ -42,7 +46,7 @@ pub fn space_check(data: &EvalData, state: CellState) -> CellState {
         return state;
     }
 
-    todo!()
+    state // TODO
 }
 
 pub fn get_low_level_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
@@ -60,16 +64,3 @@ pub fn get_low_level_snakes(me: &Battlesnake, board: &Board) -> Vec<Coord> {
 
     output
 }
-
-// // Reaching the goal
-// let dests: &[Coord];
-// if me.health <= 30 || low_level_heads.is_empty() {  // \left\{x<30:\ 1,\ x\ge30:\ \frac{\left(-x+100\right)}{70}\right\}\left\{x\ge0\right\}\left\{x\le100\right\}
-// dests = &board.food;
-// info!("Reaching food");
-// } else {
-// dests = &low_level_heads;
-// info!("Reaching low-level snakes");
-// }
-//
-// let dist = tools::min_distance(next_head, dests);
-// let state = state.add_value(settings::APPROACH_MODIFIER / dist as f32);

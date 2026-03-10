@@ -15,11 +15,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the built binary
 COPY --from=builder /app/target/release/battlesnake .
 
-# Expose the port your Rust server uses
 EXPOSE 9100
 
-# Run the binary
 CMD ["./battlesnake"]
