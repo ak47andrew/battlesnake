@@ -112,4 +112,12 @@ impl CellState {
             CellState::DEATH => {panic!("Adding value to DEATH. Do a better checking boy~")}
         }
     }
+
+    pub fn is_safe(&self, allow_potential: bool) -> bool {
+        match self {
+            CellState::SAFE(_) => { true }
+            CellState::POTENTIAL_HEAD(_) => { allow_potential }
+            CellState::DEATH => { false }
+        }
+    }
 }

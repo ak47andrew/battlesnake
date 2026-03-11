@@ -1,2 +1,4 @@
 pub const FOOD_APPROACH_MODIFIER: f32 = 300.0;
 pub const HEAD_APPROACH_MODIFIER: f32 = 77.0;
+pub const SPACE_LOW_BASE: f32 = 1.01;
+pub const SPACE_HIGH_BASE: f32 = 10.0;

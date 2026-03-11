@@ -4,7 +4,7 @@ import re
 import math
 
 pattern = re.compile(r"(\w+) was the winner")
-TOTAL_GAMES = 3000
+TOTAL_GAMES = 20_000
 
 prod_wins = 0
 draws = 0
